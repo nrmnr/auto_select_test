@@ -7,7 +7,7 @@ class AutoSelect
 	AutoSelect(){}
 	virtual ~AutoSelect(){}
 
-	int detect(const Nodes& nodes, const Qids& qids, int count_req);
+	int detect(Nodes& selected, const Nodes& candidate, const Qids& qids, int count_req);
 
  private:
 	Qids m_require_qids;
