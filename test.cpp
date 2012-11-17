@@ -12,7 +12,9 @@
 void Test::run()
 {
 	RUN_TEST(test_parser);
-	RUN_TEST(test_autosel);
+	RUN_TEST(test_autosel_no_overlap);
+	RUN_TEST(test_autosel_overlap);
+	RUN_TEST(test_autosel_shortage);
 }
 
 template<typename T>
@@ -39,10 +41,22 @@ void Test::test_parser()
 	}
 }
 
-void Test::test_autosel()
+void Test::test_autosel_no_overlap()
 {
-	test_sub("1,101, 1,102, 1,103, 1,104, 1,105, 2,201, 2,202, 2,203, 2,205, 2,101",
-					 "1,2", 5, "5,5", 1);
+	test_sub("1,101, 1,102, 1,103, 1,104, 1,105, 2,201, 2,202, 2,203, 2,205, 2,205",
+					 "1,2", 5, "5,5", 0);
+}
+
+void Test::test_autosel_overlap()
+{
+	test_sub("1,101, 1,102, 1,103, 1,104, 1,105, 2,201, 2,202, 2,203, 2,101, 2,102",
+					 "1,2", 5, "5,5", 2);
+}
+
+void Test::test_autosel_shortage()
+{
+	test_sub("1,101, 1,102, 1,103, 1,104, 1,105, 2,201, 2,202, 2,203",
+					 "1,2", 5, "5,3", 0);
 }
 
 void Test::test_sub(const char *nodes_str, const char *qids_str, int count_req, const char *expected_str, int expected_return)
