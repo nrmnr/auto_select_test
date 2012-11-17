@@ -3,11 +3,25 @@
 #include "autosel.h"
 #include <string>
 #include <sstream>
+#include <map>
 
 #define RUN_TEST(test) { \
 		std::cerr << "-> " << #test << std::endl; \
 		test(); \
 	}
+#define ASSERT_EQUAL(expected, actual) { \
+		assert_equal(expected, actual, #expected ", " #actual); \
+	}
+
+template<typename T>
+void Test::assert_equal(const T& expected, const T& actual, const char *mes)
+{
+	if (expected == actual) return;
+	std::cerr
+		<< "  !!assert_equal(" << mes << ")" << std::endl
+		<< "    expected : " << expected << std::endl
+		<< "    actual   : " << actual << std::endl;
+}
 
 void Test::run()
 {
@@ -17,27 +31,17 @@ void Test::run()
 	RUN_TEST(test_autosel_shortage);
 }
 
-template<typename T>
-void Test::assert_equal(const T& expected, const T& actual)
-{
-	if (expected == actual) return;
-	std::cerr
-		<< "  !assert_equal failed" << std::endl
-		<< "    expected : " << expected << std::endl
-		<< "    actual   : " << actual << std::endl;
-}
-
 void Test::test_parser()
 {
 	int expected[] = { 1, 2, 3, 4, -1, 2 };
 
 	std::vector<int> actual = parse_int_array("1,2, 3,4, -1,2");
-	assert_equal(6, static_cast<int>(actual.size()));
+	ASSERT_EQUAL(6, static_cast<int>(actual.size()));
 
 	int *ex = expected;
 	std::vector<int>::const_iterator ni = actual.begin();
 	for (; ni != actual.end(); ++ni, ++ex) {
-		assert_equal(*ex, *ni);
+		ASSERT_EQUAL(*ex, *ni);
 	}
 }
 
@@ -64,12 +68,43 @@ void Test::test_sub(const char *nodes_str, const char *qids_str, int count_req, 
 	Nodes result_nodes;
 	Nodes nodes = parse_nodes(nodes_str);
 	Qids qids = parse_qids(qids_str);
-	AutoSelect autosel;
-	int result = autosel.detect(result_nodes, nodes, qids, count_req);
-	assert_equal(expected_return, result);
 
-	// std::vector<int> expected = parse_int_array(expected_str);
+	{
+		AutoSelect autosel;
+		int result = autosel.detect(result_nodes, nodes, qids, count_req);
+		ASSERT_EQUAL(expected_return, result);
+	}
+	{
+		std::vector<int> expected = parse_int_array(expected_str);
+		int i = 0;
+		for (Qids::const_iterator qi = qids.begin(); qi != qids.end(); ++qi, ++i) {
+			Qid qid = *qi;
+			ASSERT_EQUAL(expected[i], count_per_qid(result_nodes, qid));
+		}
+	}
 	// todo
+}
+
+int Test::count_per_qid(const Nodes& nodes, const Qid& qid) const
+{
+	int count = 0;
+	for (Nodes::const_iterator ni = nodes.begin(); ni != nodes.end(); ++ni) {
+		if (ni->qid == qid) ++count;
+	}
+	return count;
+}
+
+int Test::count_overlap_kid(const Nodes& nodes) const
+{
+	std::map<Kid,int> counter;
+	for (Nodes::const_iterator ni = nodes.begin(); ni != nodes.end(); ++ni) {
+		counter[ni->kid]++;
+	}
+	int count = 0;
+	for (std::map<Kid,int>::const_iterator ki = counter.begin(); ki != counter.end(); ++ki) {
+		if (ki->second > 1) ++count;
+	}
+	return count;
 }
 
 std::vector<int> Test::parse_int_array(const char *array_str) const

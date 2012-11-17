@@ -6,7 +6,7 @@
 class Test
 {
 	template<typename T>
-	void assert_equal(const T& a, const T& b);
+	void assert_equal(const T& a, const T& b, const char *mes);
 
 public:
 	void run();
@@ -18,6 +18,9 @@ protected:
 	void test_autosel_shortage();
 
 	void test_sub(const char *nodes_str, const char *qids_str, int count_req, const char *expected_str, int expected_return);
+
+	int count_per_qid(const Nodes& nodes, const Qid& qid) const;
+	int count_overlap_kid(const Nodes& nodes) const;
 
 	std::vector<int> parse_int_array(const char *array_str) const;
 	Nodes parse_nodes(const char *nodes_str) const;
