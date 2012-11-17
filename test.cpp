@@ -29,6 +29,7 @@ void Test::run()
 	RUN_TEST(test_autosel_no_overlap);
 	RUN_TEST(test_autosel_overlap);
 	RUN_TEST(test_autosel_shortage);
+	RUN_TEST(test_autosel_triple);
 }
 
 void Test::test_parser()
@@ -47,20 +48,31 @@ void Test::test_parser()
 
 void Test::test_autosel_no_overlap()
 {
-	test_sub("1,101, 1,102, 1,103, 1,104, 1,105, 2,201, 2,202, 2,203, 2,205, 2,205",
-					 "1,2", 5, "5,5", 0);
+	test_sub("1,11, 1,12, 1,13, 1,14, 1,15,"
+					 "2,21, 2,22, 2,23, 2,14, 2,15",
+					 "1,2", 3, "3,3", 0);
 }
 
 void Test::test_autosel_overlap()
 {
-	test_sub("1,101, 1,102, 1,103, 1,104, 1,105, 2,201, 2,202, 2,203, 2,101, 2,102",
-					 "1,2", 5, "5,5", 2);
+	test_sub("1,11, 1,12, 1,13, 1,14, 1,15,"
+					 "2,21, 2,22, 2,13, 2,14, 2,15",
+					 "1,2", 3, "3,3", 1);
 }
 
 void Test::test_autosel_shortage()
 {
-	test_sub("1,101, 1,102, 1,103, 1,104, 1,105, 2,201, 2,202, 2,203",
-					 "1,2", 5, "5,3", 0);
+	test_sub("1,11, 1,12, 1,13, 1,14, 1,15, 1,16,"
+					 "2,11, 2,12, 2,13",
+					 "1,2", 5, "5,3", 2);
+}
+
+void Test::test_autosel_triple()
+{
+	test_sub("1,11, 1,12, 1,13, 1,14, 1,15,"
+					 "2,21, 2,12, 2,13, 2,24, 2,25,"
+					 "3,31, 3,32, 2,33, 2,14, 2,15",
+					 "1,2,3", 3, "3,3,3", 0);
 }
 
 void Test::test_sub(const char *nodes_str, const char *qids_str, int count_req, const char *expected_str, int expected_return)
