@@ -73,6 +73,7 @@ void Test::test_sub(const char *nodes_str, const char *qids_str, int count_req, 
 		AutoSelect autosel;
 		int result = autosel.detect(result_nodes, nodes, qids, count_req);
 		ASSERT_EQUAL(expected_return, result);
+		ASSERT_EQUAL(expected_return, count_overlap_kid(result_nodes));
 	}
 	{
 		std::vector<int> expected = parse_int_array(expected_str);
@@ -82,7 +83,6 @@ void Test::test_sub(const char *nodes_str, const char *qids_str, int count_req, 
 			ASSERT_EQUAL(expected[i], count_per_qid(result_nodes, qid));
 		}
 	}
-	// todo
 }
 
 int Test::count_per_qid(const Nodes& nodes, const Qid& qid) const
