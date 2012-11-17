@@ -2,20 +2,30 @@
 #include "assert.h"
 #include "autosel.h"
 
-template<typename T>
-void Test::assert_equal(const T& a, const T& b)
+#define RUN_TEST(test) { \
+		std::cerr << "-> " << #test << std::endl; \
+		test(); \
+	}
+
+void Test::run()
 {
-	if (a == b) return;
-	m_status = false;
+	RUN_TEST(test_autosel);
+}
+
+template<typename T>
+void Test::assert_equal(const T& expected, const T& actual)
+{
+	if (expected == actual) return;
 	std::cerr
-		<< std::endl
-		<< "!assert_equal failed("
-		<< m_test_name << ") : "
-		<< a << " != " << b
-		<< std::endl;
+		<< "  !assert_equal failed" << std::endl
+		<< "    expected : " << expected << std::endl
+		<< "    actual   : " << actual << std::endl;
 }
 
 void Test::test_autosel()
 {
-	assert_equal(1, 2);
+	AutoSelect autosel;
+	Nodes nodes;
+	Qids qids;
+	assert_equal(2, autosel.detect(nodes, qids, 5));
 }
