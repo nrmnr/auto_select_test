@@ -18,3 +18,4 @@ typedef std::vector<Node> Nodes;
 typedef std::set<Node> NodeSet;
 
 typedef std::vector<Qid> Qids;
+typedef std::vector<Kid> Kids;
