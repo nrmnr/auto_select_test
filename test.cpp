@@ -30,6 +30,7 @@ void Test::run()
 	RUN_TEST(test_autosel_overlap);
 	RUN_TEST(test_autosel_shortage);
 	RUN_TEST(test_autosel_triple);
+	RUN_TEST(test_autosel_zero);
 }
 
 void Test::test_parser()
@@ -73,6 +74,13 @@ void Test::test_autosel_triple()
 					 "2,21, 2,12, 2,13, 2,24, 2,25,"
 					 "3,31, 3,32, 3,33, 3,14, 3,15",
 					 "1,2,3", 3, "3,3,3", 0);
+}
+
+void Test::test_autosel_zero()
+{
+	test_sub("1,11, 1,12, 1,13, 1,14, 1,15,"
+					 "3,11, 3,12, 3,13, 3,14, 3,15",
+					 "1,2,3", 3, "3,0,3", 1);
 }
 
 void Test::test_sub(const char *nodes_str, const char *qids_str, int count_req, const char *expected_str, int expected_return)
