@@ -56,7 +56,7 @@ void Test::test_autosel_no_overlap()
 void Test::test_autosel_overlap()
 {
 	test_sub("1,11, 1,12, 1,13, 1,14, 1,15,"
-					 "2,21, 2,22, 2,13, 2,14, 2,15",
+					 "2,11, 2,12, 2,13, 2,14, 2,15",
 					 "1,2", 3, "3,3", 1);
 }
 
