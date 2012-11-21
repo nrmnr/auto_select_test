@@ -7,18 +7,19 @@
 int AutoSelect::detect(Nodes& selected, const Nodes& candidate, const Qids& qids, int count_req)
 {
 	m_candidate.assign(candidate.begin(), candidate.end());
-	std::random_shuffle(m_candidate.begin(), m_candidate.end());
-
 	m_require_qids.assign(qids.begin(), qids.end());
-	init_req_count(count_req);
 
-	m_min_overlap = calc_min_overlap(candidate, m_req_per_qid);
-	std::cerr << m_min_overlap << std::endl;
+	CountPerQid req_per_qid;
+	init_req_count(req_per_qid, candidate, count_req);
+	m_min_overlap = calc_min_overlap(candidate, req_per_qid);
 
 	SelectInfo info;
-	init_select_info(info);
+	init_select_info(info, req_per_qid);
 
-	int result = detect_comb(info, 0);
+	std::random_shuffle(m_candidate.begin(), m_candidate.end());
+	int overlap = INT_MAX;
+	bool result = detect_comb(info, overlap, 0);
+	if (!result) return INT_MAX;
 
 	selected.clear();
 	for (SelectInfo::const_iterator si = info.begin(); si != info.end(); ++si) {
@@ -29,23 +30,20 @@ int AutoSelect::detect(Nodes& selected, const Nodes& candidate, const Qids& qids
 			selected.push_back(Node(qid, *ki));
 		}
 	}
-
-	selected.assign(m_selected.begin(), m_selected.end());
-	return result;
+	return overlap;
 }
 
-void AutoSelect::init_req_count(int count_req)
+void AutoSelect::init_req_count(CountPerQid& req_per_qid, const Nodes& candidate, int count_req) const
 {
-	m_req_per_qid.clear();
-	for (Nodes::const_iterator ni = m_candidate.begin(); ni != m_candidate.end(); ++ni) {
-		m_req_per_qid[ni->qid] = std::min<int>(m_req_per_qid[ni->qid]+1, count_req);
+	req_per_qid.clear();
+	for (Nodes::const_iterator ni = candidate.begin(); ni != candidate.end(); ++ni) {
+		req_per_qid[ni->qid] = std::min<int>(req_per_qid[ni->qid]+1, count_req);
 	}
 }
 
-void AutoSelect::init_select_info(SelectInfo& info)
+void AutoSelect::init_select_info(SelectInfo& info, const CountPerQid& req_per_qid) const
 {
-	assert(m_req_per_qid.size() > 0);
-	for (CountPerQid::iterator qi = m_req_per_qid.begin(); qi != m_req_per_qid.end(); ++qi) {
+	for (CountPerQid::const_iterator qi = req_per_qid.begin(); qi != req_per_qid.end(); ++qi) {
 		Qid qid = qi->first;
 		int count = qi->second;
 		info[qid] = QidSelectInfo(qid, count);
@@ -66,41 +64,45 @@ int AutoSelect::calc_min_overlap(const Nodes& candidate, const CountPerQid& req_
 	return (count_kid >= total_count_req)? 0 : (total_count_req - count_kid);
 }
 
-int AutoSelect::detect_comb(SelectInfo& info, int pos)
+bool AutoSelect::detect_comb(SelectInfo& info, int& overlap, int pos)
 {
+	overlap = count_overlap(info);
 	if (detected(info)) {
-		return count_overlap(info);
+		return (overlap == m_min_overlap);
 	}
 	if (pos >= m_candidate.size()) {
-		return INT_MAX;
+		return false;
 	}
 
 	Node node = m_candidate[pos];
 
 	SelectInfo info_s(info);
 	SelectInfo info_u(info);
-	int ol_s = INT_MAX, ol_u = INT_MAX;
+	int ol_s = INT_MAX;
+	int ol_u = INT_MAX;
 	if (!info[node.qid].done()) {
 		info_s[node.qid].push(node.kid);
-		ol_s = detect_comb(info_s, pos+1);
-		if (ol_s == m_min_overlap) {
+		if (detect_comb(info_s, ol_s,  pos+1)) {
 			info = info_s;
-			return ol_s;
+			overlap = ol_s;
+			return true;
 		}
 	}
 	{
-		ol_u = detect_comb(info_u, pos+1);
-		if (ol_u == m_min_overlap) {
+		if (detect_comb(info_u, ol_u, pos+1)) {
 			info = info_u;
-			return ol_u;
+			overlap = ol_u;
+			return true;
 		}
 	}
 	if (ol_s <= ol_u) {
 		info = info_s;
-		return ol_s;
+		overlap = ol_s;
+		return false;
 	} else {
 		info = info_u;
-		return ol_u;
+		overlap = ol_u;
+		return false;
 	}
 }
 
